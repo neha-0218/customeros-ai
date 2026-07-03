@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — CustomerOS AI{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="text-muted">Customer Feedback</h6>
+                <p class="mb-2">Track and analyze customer signals</p>
+                <a href="{% url 'feedback_list' %}" class="btn btn-sm btn-outline-primary">View Feedback</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="text-muted">Support Tickets</h6>
+                <p class="mb-2">Monitor and resolve support issues</p>
+                <a href="{% url 'ticket_list' %}" class="btn btn-sm btn-outline-primary">View Tickets</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="text-muted">Account Health</h6>
+                <p class="mb-2">Monitor customer health scores</p>
+                <a href="{% url 'account_health_list' %}" class="btn btn-sm btn-outline-primary">View Health</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="text-muted">Feature Requests</h6>
+                <p class="mb-2">Track and prioritize feature demand</p>
+                <a href="{% url 'feature_list' %}" class="btn btn-sm btn-outline-primary">View Features</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="text-muted">Product Roadmap</h6>
+                <p class="mb-2">Plan and track product initiatives</p>
+                <a href="{% url 'roadmap_list' %}" class="btn btn-sm btn-outline-primary">View Roadmap</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h6 class="text-muted">Risk Flags</h6>
+                <p class="mb-2">Accounts flagged for churn risk</p>
+                <a href="{% url 'risk_flag_list' %}" class="btn btn-sm btn-outline-danger">View Risks</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

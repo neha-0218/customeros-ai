@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}AI Insights — CustomerOS AI{% endblock %}
+{% block page_title %}AI Insights{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <p class="text-muted mb-0">AI-generated product and customer intelligence</p>
+    <div class="d-flex gap-2">
+       <form method="post" action="{% url 'generate_feature_insight' %}" data-ai-action>
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-primary btn-sm">
+                ✨ Feature Demand Analysis
+            </button>
+        </form>
+        <form method="post" action="{% url 'generate_feedback_insight' %}" data-ai-action>
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-primary btn-sm">
+                💬 Feedback Theme Analysis
+            </button>
+        </form>
+    </div>
+</div>
+
+{% if org_insights %}
+<h5 class="mb-3">Organization-Wide Insights</h5>
+<div class="row g-3 mb-4">
+    {% for insight in org_insights %}
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge {% if insight.insight_type == 'prioritization' %}bg-primary{% elif insight.insight_type == 'feedback_theme' %}bg-info text-dark{% else %}bg-secondary{% endif %}">
+                        {{ insight.get_insight_type_display }}
+                    </span>
+                    <span class="badge {% if insight.status == 'accepted' %}bg-success{% elif insight.status == 'rejected' %}bg-danger{% else %}bg-secondary{% endif %}">
+                        {{ insight.get_status_display }}
+                    </span>
+                </div>
+                <p class="card-text small">{{ insight.response_text|truncatechars:200 }}</p>
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <small class="text-muted">{{ insight.created_at|date:"M d, Y H:i" }} — {{ insight.latency_ms }}ms</small>
+                    <a href="{% url 'ai_insight_detail' insight.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if insights %}
+<h5 class="mb-3">Account-Level Insights</h5>
+<div class="row g-3">
+    {% for insight in insights %}
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge bg-danger">{{ insight.get_insight_type_display }}</span>
+                    <span class="badge {% if insight.status == 'accepted' %}bg-success{% elif insight.status == 'rejected' %}bg-danger{% else %}bg-secondary{% endif %}">
+                        {{ insight.get_status_display }}
+                    </span>
+                </div>
+                {% if insight.customer_account %}
+                <small class="text-muted d-block mb-1">{{ insight.customer_account.name }}</small>
+                {% endif %}
+                <p class="card-text small">{{ insight.response_text|truncatechars:200 }}</p>
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <small class="text-muted">{{ insight.created_at|date:"M d, Y H:i" }} — {{ insight.latency_ms }}ms</small>
+                    <a href="{% url 'ai_insight_detail' insight.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info mt-3">
+    No account-level insights yet. Go to Account Health and click "Generate AI Insight" on any at-risk account.
+</div>
+{% endif %}
+{% endblock %}

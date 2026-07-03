@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Account Health — CustomerOS AI{% endblock %}
+{% block page_title %}Account Health{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <p class="text-muted mb-0">Sorted by health score, lowest first</p>
+    <a href="{% url 'risk_flag_list' %}" class="btn btn-outline-danger btn-sm">⚠ View Risk Flags</a>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-auto">
+                <select name="tier" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">All Tiers</option>
+                    {% for value, label in tier_choices %}
+                        <option value="{{ value }}" {% if request.GET.tier == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr><th>Account</th><th>Health Score</th><th>Risk Tier</th><th>Usage</th><th>Tickets</th><th>Sentiment</th><th>Adoption</th><th>Payment</th><th>Plan</th></tr>
+            </thead>
+            <tbody>
+                {% for item in page_obj %}
+                <tr style="cursor:pointer" onclick="window.location='{% url 'account_health_detail' item.account.pk %}'">
+                    <td><strong>{{ item.account.name }}</strong></td>
+                    <td><span class="fw-bold {% if item.snapshot.composite_score < 40 %}text-danger{% elif item.snapshot.composite_score < 60 %}text-warning{% else %}text-success{% endif %}">{{ item.snapshot.composite_score }}</span></td>
+                    <td><span class="badge {% if item.snapshot.risk_tier == 'critical' %}bg-danger{% elif item.snapshot.risk_tier == 'at_risk' %}bg-warning text-dark{% elif item.snapshot.risk_tier == 'moderate' %}bg-info text-dark{% else %}bg-success{% endif %}">{{ item.snapshot.get_risk_tier_display }}</span></td>
+                    <td>{{ item.snapshot.usage_score }}</td>
+                    <td>{{ item.snapshot.ticket_score }}</td>
+                    <td>{{ item.snapshot.sentiment_score }}</td>
+                    <td>{{ item.snapshot.adoption_score }}</td>
+                    <td>{{ item.snapshot.payment_score }}</td>
+                    <td>{{ item.account.get_plan_tier_display }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="9" class="text-center text-muted py-4">No health data yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if page_obj.has_other_pages %}
+        <nav><ul class="pagination pagination-sm">
+            {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+            <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+        </ul></nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

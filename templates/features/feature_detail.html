@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}{{ feature.title }} — CustomerOS AI{% endblock %}
+{% block page_title %}Feature Request{% endblock %}
+
+{% block content %}
+<div style="max-width: 700px;">
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h5 class="card-title">{{ feature.title }}</h5>
+                    <h6 class="card-subtitle mb-3 text-muted">{{ feature.organization_account.name }} — {{ feature.created_at|date:"M d, Y" }}</h6>
+                </div>
+                <span class="badge bg-secondary fs-6">{{ feature.vote_count }} votes</span>
+            </div>
+            <p class="card-text">{{ feature.description }}</p>
+            <div class="row mt-3">
+                <div class="col-6"><strong>Status:</strong> <span class="badge {% if feature.status == 'shipped' %}bg-success{% elif feature.status == 'planned' %}bg-primary{% elif feature.status == 'declined' %}bg-danger{% else %}bg-secondary{% endif %}">{{ feature.get_status_display }}</span></div>
+                <div class="col-6"><strong>Requested by:</strong> {% if feature.requested_by %}{{ feature.requested_by.username }}{% else %}<span class="text-muted">Unknown</span>{% endif %}</div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <form method="post" action="{% url 'feature_vote' feature.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-primary">▲ Vote for this feature</button>
+                </form>
+                <a href="{% url 'feature_list' %}" class="btn btn-outline-secondary">← Back</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

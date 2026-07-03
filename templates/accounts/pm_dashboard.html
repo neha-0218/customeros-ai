@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — CustomerOS AI{% endblock %}
+{% block page_title %}Product Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- KPI Row -->
+<div class="row g-3 mb-4">
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body py-3">
+                <h3 class="mb-0">{{ total_accounts }}</h3>
+                <small class="text-muted">Total Accounts</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center border-warning">
+            <div class="card-body py-3">
+                <h3 class="mb-0 text-warning">{{ at_risk }}</h3>
+                <small class="text-muted">At Risk</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center border-danger">
+            <div class="card-body py-3">
+                <h3 class="mb-0 text-danger">{{ critical }}</h3>
+                <small class="text-muted">Critical</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center border-danger">
+            <div class="card-body py-3">
+                <h3 class="mb-0 text-danger">{{ open_flags }}</h3>
+                <small class="text-muted">Open Risk Flags</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center border-warning">
+            <div class="card-body py-3">
+                <h3 class="mb-0 text-warning">{{ critical_tickets }}</h3>
+                <small class="text-muted">Critical Tickets</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center">
+            <div class="card-body py-3">
+                <h3 class="mb-0">{{ open_tickets }}</h3>
+                <small class="text-muted">Open Tickets</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Second Row -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body py-3">
+                <h3 class="mb-0">{{ total_feedback }}</h3>
+                <small class="text-muted">Total Feedback</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body py-3">
+                <h3 class="mb-0 text-primary">{{ in_progress_items }}</h3>
+                <small class="text-muted">Roadmap In Progress</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body py-3">
+                <h3 class="mb-0">{{ planned_items }}</h3>
+                <small class="text-muted">Roadmap Planned</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center {% if ai_acceptance_rate > 50 %}border-success{% else %}border-warning{% endif %}">
+            <div class="card-body py-3">
+                <h3 class="mb-0 {% if ai_acceptance_rate > 50 %}text-success{% else %}text-warning{% endif %}">
+                    {{ ai_acceptance_rate }}%
+                </h3>
+                <small class="text-muted">AI Acceptance Rate</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detail Rows -->
+<div class="row g-3">
+
+    <!-- Urgent Feedback -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>High Urgency Feedback</strong>
+                <a href="{% url 'feedback_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead class="table-light">
+                        <tr><th>Account</th><th>Content</th><th>Urgency</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for fb in recent_urgent_feedback %}
+                        <tr onclick="window.location='{% url 'feedback_detail' fb.pk %}'" style="cursor:pointer">
+                            <td>{{ fb.customer_account.name }}</td>
+                            <td>{{ fb.content|truncatechars:40 }}</td>
+                            <td><span class="badge bg-danger">{{ fb.urgency_score }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-center text-muted py-3">No urgent feedback.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Feature Requests -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>Top Feature Requests</strong>
+                <a href="{% url 'feature_list' %}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead class="table-light">
+                        <tr><th>Feature</th><th>Status</th><th>Votes</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for feature in top_features %}
+                        <tr onclick="window.location='{% url 'feature_detail' feature.pk %}'" style="cursor:pointer">
+                            <td>{{ feature.title|truncatechars:35 }}</td>
+                            <td><span class="badge bg-secondary">{{ feature.get_status_display }}</span></td>
+                            <td><strong>{{ feature.vote_count }}</strong></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-center text-muted py-3">No features yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

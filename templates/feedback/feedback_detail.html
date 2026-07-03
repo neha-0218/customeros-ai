@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Feedback Detail — CustomerOS AI{% endblock %}
+{% block page_title %}Feedback Detail{% endblock %}
+
+{% block content %}
+<div style="max-width: 700px;">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">{{ feedback.customer_account.name }}</h5>
+            <h6 class="card-subtitle mb-3 text-muted">
+                {{ feedback.get_source_display }} — {{ feedback.created_at|date:"M d, Y" }}
+            </h6>
+            <p class="card-text">{{ feedback.content }}</p>
+            <div class="row mt-3">
+                <div class="col-6"><strong>Status:</strong> {{ feedback.get_status_display }}</div>
+                <div class="col-6">
+                    <strong>Sentiment:</strong>
+                    {% if feedback.sentiment_score %}
+                        <span class="{% if feedback.sentiment_score < 0 %}text-danger{% else %}text-success{% endif %}">
+                            {{ feedback.sentiment_score }}
+                        </span>
+                    {% else %}
+                        <span class="text-muted">Not analyzed</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% if feedback.themes.all %}
+            <hr>
+            <strong>AI Themes:</strong>
+            <div class="mt-2">
+                {% for theme in feedback.themes.all %}
+                    <span class="badge bg-info text-dark me-1">{{ theme.theme_name }} ({{ theme.confidence_score }})</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <div class="mt-4">
+                <a href="{% url 'feedback_list' %}" class="btn btn-outline-secondary btn-sm">← Back</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

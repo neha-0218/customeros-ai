@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Feature Requests — CustomerOS AI{% endblock %}
+{% block page_title %}Feature Requests{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <p class="text-muted mb-0">Sorted by vote count</p>
+    <a href="{% url 'feature_create' %}" class="btn btn-primary">+ New Request</a>
+</div>
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-auto">
+                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr><th>Title</th><th>Account</th><th>Status</th><th>Votes</th><th>Requested</th><th></th></tr>
+            </thead>
+            <tbody>
+                {% for feature in page_obj %}
+                <tr>
+                    <td><a href="{% url 'feature_detail' feature.pk %}">{{ feature.title }}</a></td>
+                    <td>{{ feature.organization_account.name }}</td>
+                    <td><span class="badge {% if feature.status == 'shipped' %}bg-success{% elif feature.status == 'planned' %}bg-primary{% elif feature.status == 'declined' %}bg-danger{% else %}bg-secondary{% endif %}">{{ feature.get_status_display }}</span></td>
+                    <td><strong>{{ feature.vote_count }}</strong></td>
+                    <td>{{ feature.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        <form method="post" action="{% url 'feature_vote' feature.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-primary">▲ Vote</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No feature requests yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

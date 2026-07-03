@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Risk Flags — CustomerOS AI{% endblock %}
+{% block page_title %}Risk Flags{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-auto">
+                <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">All Statuses</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr><th>Account</th><th>Trigger Reason</th><th>Status</th><th>Assigned To</th><th>Days Open</th><th>Flagged</th></tr>
+            </thead>
+            <tbody>
+                {% for flag in page_obj %}
+                <tr onclick="window.location='{% url 'account_health_detail' flag.customer_account.pk %}'" style="cursor:pointer">
+                    <td><strong>{{ flag.customer_account.name }}</strong></td>
+                    <td>{{ flag.trigger_reason }}</td>
+                    <td><span class="badge {% if flag.status == 'open' %}bg-danger{% elif flag.status == 'investigating' %}bg-warning text-dark{% elif flag.status == 'resolved' %}bg-success{% else %}bg-secondary{% endif %}">{{ flag.get_status_display }}</span></td>
+                    <td>{% if flag.assigned_to %}{{ flag.assigned_to.username }}{% else %}—{% endif %}</td>
+                    <td>{{ flag.days_open }}</td>
+                    <td>{{ flag.created_at|date:"M d, Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No risk flags.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

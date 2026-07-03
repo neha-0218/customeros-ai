@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}{{ item.title }} — CustomerOS AI{% endblock %}
+{% block page_title %}{{ item.title }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 700px;">
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+                <h5 class="card-title">{{ item.title }}</h5>
+                <span class="badge {% if item.status == 'shipped' %}bg-success{% elif item.status == 'in_progress' %}bg-primary{% elif item.status == 'planned' %}bg-info text-dark{% else %}bg-secondary{% endif %}">{{ item.get_status_display }}</span>
+            </div>
+            <p class="card-text mt-2">{{ item.description }}</p>
+            <div class="row mt-3">
+                <div class="col-4"><strong>Priority Score:</strong> {{ item.priority_score }}</div>
+                <div class="col-4"><strong>Target:</strong> {{ item.target_quarter }} {{ item.target_year }}</div>
+                <div class="col-4"><strong>Owner:</strong> {% if item.owner %}{{ item.owner.username }}{% else %}—{% endif %}</div>
+            </div>
+            {% if item.linked_features.all %}
+            <hr>
+            <strong>Linked Feature Requests:</strong>
+            <ul class="mt-2">
+                {% for feature in item.linked_features.all %}
+                <li><a href="{% url 'feature_detail' feature.pk %}">{{ feature.title }}</a> <span class="badge bg-secondary ms-1">{{ feature.vote_count }} votes</span></li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            <div class="mt-4"><a href="{% url 'roadmap_list' %}" class="btn btn-outline-secondary btn-sm">← Back</a></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
