@@ -13,4 +13,5 @@ urlpatterns = [
     path('dashboard/pm/', pm_dashboard, name='pm_dashboard'),
     path('dashboard/analyst/', analyst_dashboard, name='analyst_dashboard'),
     path('dashboard/cs/', cs_dashboard, name='cs_dashboard'),
+    path('', lambda request: redirect('login'), name='home'),
 ]
