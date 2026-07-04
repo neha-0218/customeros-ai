@@ -244,3 +244,181 @@ Generate:
 
     except ValueError as e:
         raise ValueError(f"Feedback theme insight failed: {str(e)}")
+
+def generate_copilot_response(question: str, user) -> 'AIInsight':
+    """
+    AI Copilot: answers natural language product questions
+    grounded in real database context.
+
+    This is structured retrieval + LLM generation.
+    Not vector RAG yet — that's a planned enhancement.
+    Current approach: detect question intent, pull relevant
+    data, build context, generate grounded answer.
+    """
+    from ai_engine.models import AIInsight, AIQuery
+    from accounts.models import CustomerAccount
+    from feedback.models import Feedback, FeedbackTheme
+    from tickets.models import Ticket
+    from features.models import Feature
+    from health.models import HealthScoreSnapshot, RiskFlag
+    from django.db.models import Count, Avg
+
+    org = user.organization
+    question_lower = question.lower()
+
+    # --- Build context based on question intent ---
+    context_sections = []
+
+    # Always include health summary
+    accounts = CustomerAccount.objects.filter(
+        organization=org, is_active=True
+    ).prefetch_related('health_snapshots')
+
+    at_risk_accounts = []
+    for account in accounts:
+        latest = account.health_snapshots.order_by('-created_at').first()
+        if latest and latest.risk_tier in ['at_risk', 'critical']:
+            at_risk_accounts.append(
+                f"- {account.name}: score {latest.composite_score}, "
+                f"tier {latest.get_risk_tier_display()}, "
+                f"MRR ${account.mrr}"
+            )
+
+    if at_risk_accounts:
+        context_sections.append(
+            "AT-RISK ACCOUNTS:\n" + "\n".join(at_risk_accounts)
+        )
+
+    # Add ticket context if question is about support/problems
+    if any(word in question_lower for word in
+           ['ticket', 'support', 'issue', 'problem', 'bug', 'complaint']):
+        open_tickets = Ticket.objects.filter(
+            customer_account__organization=org,
+            status__in=['open', 'in_progress', 'escalated']
+        ).order_by('-created_at')[:10]
+
+        ticket_lines = [
+            f"- [{t.priority}] {t.subject} — {t.customer_account.name}"
+            for t in open_tickets
+        ]
+        context_sections.append(
+            "OPEN TICKETS:\n" + "\n".join(ticket_lines)
+        )
+
+    # Add feedback context if question is about sentiment/complaints
+    if any(word in question_lower for word in
+           ['feedback', 'complaint', 'sentiment', 'customers saying',
+            'pain', 'frustrat']):
+        themes = FeedbackTheme.objects.filter(
+            feedback__customer_account__organization=org
+        ).values('theme_name').annotate(
+            count=Count('id')
+        ).order_by('-count')[:8]
+
+        theme_lines = [
+            f"- {t['theme_name']}: {t['count']} occurrences"
+            for t in themes
+        ]
+
+        recent_negative = Feedback.objects.filter(
+            customer_account__organization=org,
+            sentiment_score__lt=-0.3
+        ).order_by('-urgency_score')[:5]
+
+        neg_lines = [
+            f"- {f.customer_account.name}: {f.content[:100]}"
+            for f in recent_negative
+        ]
+
+        context_sections.append(
+            "TOP FEEDBACK THEMES:\n" + "\n".join(theme_lines)
+        )
+        if neg_lines:
+            context_sections.append(
+                "HIGH-URGENCY NEGATIVE FEEDBACK:\n" + "\n".join(neg_lines)
+            )
+
+    # Add feature context if question is about prioritization/roadmap
+    if any(word in question_lower for word in
+           ['priorit', 'feature', 'build', 'roadmap', 'next',
+            'focus', 'ship']):
+        top_features = Feature.objects.filter(
+            organization_account__organization=org
+        ).order_by('-vote_count')[:8]
+
+        feature_lines = [
+            f"- {f.title}: {f.vote_count} votes, status: {f.get_status_display()}"
+            for f in top_features
+        ]
+        context_sections.append(
+            "TOP FEATURE REQUESTS:\n" + "\n".join(feature_lines)
+        )
+
+    # Add churn/risk context if question is about churn
+    if any(word in question_lower for word in
+           ['churn', 'risk', 'renew', 'cancel', 'lose', 'retain']):
+        open_flags = RiskFlag.objects.filter(
+            customer_account__organization=org,
+            status__in=['open', 'investigating']
+        ).select_related('customer_account')[:10]
+
+        flag_lines = [
+            f"- {f.customer_account.name}: {f.trigger_reason} "
+            f"({f.days_open} days open)"
+            for f in open_flags
+        ]
+        if flag_lines:
+            context_sections.append(
+                "OPEN RISK FLAGS:\n" + "\n".join(flag_lines)
+            )
+
+    # Build final context
+    full_context = "\n\n".join(context_sections) if context_sections else \
+        "No specific data context available for this question."
+
+    system_prompt = """You are an AI Product Copilot for a B2B SaaS company.
+You answer product and customer intelligence questions for Product Managers.
+You have access to real customer data including health scores, tickets,
+feedback, and feature requests.
+Be specific and data-driven. Reference actual account names and numbers
+from the context when relevant.
+Keep answers under 300 words. Be direct and actionable.
+Format with clear sections if the answer has multiple parts."""
+
+    prompt = f"""Context from CustomerOS AI database:
+
+{full_context}
+
+Product Manager's question: {question}
+
+Provide a specific, data-grounded answer based on the context above."""
+
+    try:
+        response_text, latency_ms = call_openrouter(prompt, system_prompt)
+
+        # Store the query
+        query = AIQuery.objects.create(
+            asked_by=user,
+            query_text=question,
+        )
+
+        # Store the insight
+        insight = AIInsight.objects.create(
+            insight_type='copilot_answer',
+            status='generated',
+            customer_account=None,
+            generated_for_user=user,
+            prompt_input=prompt,
+            response_text=response_text,
+            model_used=settings.OPENROUTER_MODEL,
+            latency_ms=latency_ms,
+        )
+
+        # Link query to insight
+        query.response_insight = insight
+        query.save()
+
+        return insight
+
+    except ValueError as e:
+        raise ValueError(f"Copilot response failed: {str(e)}")
