@@ -178,8 +178,8 @@
     <!-- AI -->
     <div class="nav-section">AI</div>
 
-    <a href="#" class="disabled-link">
-        🤖 AI Copilot <small>(Phase 16)</small>
+   <a href="{% url 'ai_copilot' %}" class="{% if 'copilot' in request.resolver_match.url_name %}active{% endif %}">
+        🤖 AI Copilot
     </a>
 
     <a href="{% url 'ai_insight_list' %}"
