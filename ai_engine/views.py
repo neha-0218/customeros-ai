@@ -102,3 +102,62 @@ def generate_feedback_insight(request):
     except ValueError as e:
         messages.error(request, f"AI generation failed: {str(e)}")
         return redirect('feedback_list')
+
+@login_required
+def ai_copilot(request):
+    """
+    Main AI Copilot interface.
+    Shows question input + history of past queries.
+    """
+    from .models import AIQuery
+
+    past_queries = AIQuery.objects.filter(
+        asked_by__organization=request.user.organization
+    ).select_related('response_insight').order_by('-created_at')[:10]
+
+    return render(request, 'ai_engine/copilot.html', {
+        'past_queries': past_queries,
+    })
+
+
+@login_required
+def ai_copilot_ask(request):
+    """Handles question submission."""
+    from .services import generate_copilot_response
+
+    if request.method == 'POST':
+        question = request.POST.get('question', '').strip()
+        if not question:
+            messages.error(request, "Please enter a question.")
+            return redirect('ai_copilot')
+
+        try:
+            insight = generate_copilot_response(question, request.user)
+            return redirect('ai_insight_detail', pk=insight.pk)
+        except ValueError as e:
+            messages.error(request, f"Copilot error: {str(e)}")
+            return redirect('ai_copilot')
+
+    return redirect('ai_copilot')
+    
+@login_required
+def ai_copilot(request):
+    from .models import AIQuery
+
+    past_queries = AIQuery.objects.filter(
+        asked_by__organization=request.user.organization
+    ).select_related('response_insight').order_by('-created_at')[:10]
+
+    suggested_questions = [
+        "Which accounts are most at risk this week?",
+        "What should we prioritize on the roadmap next?",
+        "What are customers complaining about most?",
+        "Which features have the highest demand?",
+        "Why are customers churning?",
+        "Which accounts need CS intervention urgently?",
+    ]
+
+    return render(request, 'ai_engine/copilot.html', {
+        'past_queries': past_queries,
+        'suggested_questions': suggested_questions,
+    })
