@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from core.api_router import router
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -16,6 +17,7 @@ urlpatterns = [
     path('api/integrations/', include('integrations.urls')),
     path('api/observability/', include('observability.urls')),
     path('api/reports/', include('reports.urls')),
+    path('api/v1/', include(router.urls)),
     path('', include('accounts.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
