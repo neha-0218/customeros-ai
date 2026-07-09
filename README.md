@@ -196,7 +196,7 @@ Enables Customer Success teams to identify at-risk customers early and prioritiz
 
 ### Dashboard
 
-![Customer Health Dashboard](screenshots/customer-health.png)
+![Customer Health Dashboard](screenshots/customer-health.jpg)
 
 ---
 
@@ -220,7 +220,7 @@ Provides a structured framework for prioritizing product investments based on me
 
 ### Dashboard
 
-![Feature Demand Dashboard](screenshots/feature-demand.png)
+![Feature Demand Dashboard](screenshots/feature-demand.jpg)
 
 ---
 
@@ -244,7 +244,7 @@ Measures AI quality, user trust, and model performance.
 
 ### Dashboard
 
-![AI Intelligence Dashboard](screenshots/ai-dashboard.png)
+![AI Intelligence Dashboard](screenshots/ai-dashboard.jpg)
 
 ---
 
